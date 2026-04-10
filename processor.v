@@ -14,7 +14,7 @@
 //muxes: alu source mux, write back mux, pc mux
 //adders: pc+4, branch target adder
 
-
+// INSTRUCTION MEMORY LOGIC 
 module PC (pc_out, pc_in, reset, clk);
 input [31:0] pc_in;
 input clk;
@@ -99,3 +99,76 @@ begin
 end
 endmodule
 
+
+module data_memory(data_out, data_in, address, MemWrite, MemRead, clk);
+input clk;
+input [31:0] data_in;
+input [31:0] address;
+input MemRead, MemWrite;
+
+output reg [31:0] data_out;
+
+reg [7:0] datamemory [31:0];
+integer i;
+
+initial for (i=0; i<64; i = i+1) memory[i] = 0;
+
+always @ (posedfe clk)
+begin
+    if(MemWrite)
+    begin
+        memory[address] <= data_in [7:0];
+        memory[address + 1]<= data_in[15:8];
+        memory[address + 2] <= data_in[23:16];
+        memory[address + 3]<= data_in[31:24];
+    end
+    else if (MemRead)
+    data_out <= {memory[address + 3], memory[address + 2], memory[address + 1], memory[address]};
+end
+endmodule
+
+module imm_gen(immediate_output, instruction);
+input [31:0] instruction;
+output reg [31:0] immediate_output;
+
+parameter [6:0] LOAD_OPCODE = 7'b0000011;
+parameter [6:0] STORE_OPCODE = 7'b0100011;
+parameter [6:0] BRANCH_OPCODE = 7'b1100011;
+
+wire[6:0] opcode = instruction[6:0];
+
+//the imm for each is different so stored in seperated wires 
+wire [11:0] load_im = instruction[31:20];
+wire [11:0] store_im = {instruction[31:25], instruction[11:7]};
+wire [12:1] branch_im = {instruction[31], instruction[7], instruction[30:25], instruction[11:8]};
+
+always @(*) begin
+    case (opcode)
+         LOAD_OPCODE: immediate_output = { {20{load_im[11]}}, load_im};
+         STORE_OPCODE: immediate_output = { {20{store_im[11]}}, store_im};
+         BRANCH_OPCODE: immediate_output = 2* {{20{branch_im[12]}}, branch_im};
+         default: immediate_output = 32'b0;
+    endcase
+end
+endmodule
+
+module Reg_file(read_data1, read_data2, read_reg1, read_reg2, write_reg, write_data, clk, reset, RegWrite);
+input [4:0] read_reg1;
+input [4:0] read_reg2;
+input [4:0] write_reg;
+input [31:0] write_data;
+output [31:0] read_data1;
+output [31:0] read_data2;
+
+reg [31:0] regfile [31:0];
+integer i;
+
+assign read_data1 = regfile[read_reg1];
+assign read_data2 = regfile[read_reg2];
+
+always @ (posedge clk)
+begin
+    if(reset) for(i=0; i<12; i=i+1) regfile[i] <= 32'b0;
+    else if(RegWrite) regfile[write_reg] <= write_data;
+end
+endmodule
