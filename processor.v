@@ -64,7 +64,7 @@ begin
         Memory[14] = 8'h7b;
         Memory[13] = 8'h4e;
         Memory[12] = 8'h33;
-        / Setting 32-bit instruction: sll t4, s8, s9
+        // Setting 32-bit instruction: sll t4, s8, s9
         Memory[19] = 8'h01;
         Memory[18] = 8'h9c;
         Memory[17] = 8'h1e;
