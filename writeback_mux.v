@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module writeback_mux(
     input [31:0] alu_result,
     input [31:0] read_data,

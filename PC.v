@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module PC (pc_out, pc_in, reset, clk);
 input [31:0] pc_in;
 input clk;

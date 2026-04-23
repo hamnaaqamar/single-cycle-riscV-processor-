@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module imm_gen(immediate_output, instruction);
 input [31:0] instruction;
 output reg [31:0] immediate_output;

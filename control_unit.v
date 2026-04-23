@@ -1,8 +1,9 @@
+`timescale 1ns/1ps
 module control_unit(Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, RegWrite, opcode);
 input [6:0] opcode;
 output reg Branch;
 output reg MemRead;
-output reg MemRead;
+output reg MemtoReg;
 output reg [1:0] ALUOp;
 output reg MemWrite;
 output reg ALUSrc;

@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module alu_src_mux(
     input [31:0] read_data2,
     input [31:0] imm,

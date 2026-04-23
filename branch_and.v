@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module branch_and(
     input branch,
     input zero,

@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module riscv_single_cycle(
     input clk,
     input reset
