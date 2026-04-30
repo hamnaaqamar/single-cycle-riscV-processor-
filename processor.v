@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
-module riscv_single_cycle(
+
+module processor(
     input clk,
     input reset
 );
@@ -17,6 +18,7 @@ wire [1:0] ALUOp;
 
 // Register file signals
 wire [31:0] read_data1, read_data2, write_data_reg;
+wire [4:0] write_reg;
 
 // Immediate
 wire [31:0] imm;
@@ -28,6 +30,11 @@ wire zero;
 
 // Data memory
 wire [31:0] data_mem_out;
+
+// Extract instruction fields for debugging
+wire [4:0] rd_field = instruction[11:7];
+wire [4:0] rs1_field = instruction[19:15];
+wire [4:0] rs2_field = instruction[24:20];
 
 // PC + 4 adder
 adder4 pc_adder(
@@ -64,12 +71,12 @@ control_unit ctrl(
 );
 
 // Register file
-Reg_file reg_file(
+Reg_file reg_file_inst(
     .read_data1(read_data1),
     .read_data2(read_data2),
-    .read_reg1(instruction[19:15]),
-    .read_reg2(instruction[24:20]),
-    .write_reg(instruction[11:7]),
+    .read_reg1(rs1_field),
+    .read_reg2(rs2_field),
+    .write_reg(rd_field),
     .write_data(write_data_reg),
     .clk(clk),
     .reset(reset),
@@ -146,5 +153,13 @@ pc_mux pc_mux_inst(
     .pc_src(pc_src),
     .pc_next(pc_next)
 );
+
+// Debug display
+always @(posedge clk) begin
+    if (RegWrite && !reset) begin
+        $display("DEBUG: Instr=0x%8h, rd=%0d, rs1=%0d, rs2=%0d, ALU=%0d", 
+                 instruction, rd_field, rs1_field, rs2_field, alu_result);
+    end
+end
 
 endmodule

@@ -1,4 +1,6 @@
+
 `timescale 1ns/1ps
+
 module alu(
     input [31:0] a,
     input [31:0] b,
@@ -9,18 +11,15 @@ module alu(
 
 always @(*) begin
     case(alu_control)
-        4'b0001: result = a << b[4:0];      // sll
-        4'b0010: result = a + b;             // add
-        4'b0011: result = a | b;             // or
-        4'b0100: result = a ^ b;             // xor
-        4'b0101: result = a & b;             // and
-        4'b0110: result = a - b;             // sub
-        4'b0111: result = (a < b) ? 1 : 0;   // slt
-        4'b1000: result = ($unsigned(a) < $unsigned(b)) ? 1 : 0; // sltu
-        4'b1001: result = a >> b[4:0];       // srl
-        4'b1011: result = $signed(a) >>> b[4:0]; // sra
+        4'b0010: result = a + b;      // ADD (for LW/SW address calculation)
+        4'b0110: result = a - b;      // SUBTRACT (for BEQ comparison and R-type SUB)
+        4'b0101: result = a & b;      // AND
+        4'b0011: result = a | b;      // OR
         default: result = 32'b0;
     endcase
+    
+    // Zero flag is 1 when result is 0 (used for BEQ)
     zero = (result == 0);
 end
+
 endmodule

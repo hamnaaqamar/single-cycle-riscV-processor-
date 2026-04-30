@@ -1,25 +1,54 @@
 `timescale 1ns/1ps
-module imm_gen(immediate_output, instruction);
-input [31:0] instruction;
-output reg [31:0] immediate_output;
+module imm_gen(
+    input  [31:0] instruction,
+    output reg [31:0] immediate_output
+);
 
-parameter [6:0] LOAD_OPCODE = 7'b0000011;
-parameter [6:0] STORE_OPCODE = 7'b0100011;
-parameter [6:0] BRANCH_OPCODE = 7'b1100011;
+wire [6:0] opcode = instruction[6:0];
 
-wire[6:0] opcode = instruction[6:0];
+// I-type: bits [31:20]
+wire [11:0] i_imm = instruction[31:20];
 
-//the imm for each is different so stored in seperated wires 
-wire [11:0] load_im = instruction[31:20];
-wire [11:0] store_im = {instruction[31:25], instruction[11:7]};
-wire [12:1] branch_im = {instruction[31], instruction[7], instruction[30:25], instruction[11:8]};
+// S-type: bits [31:25] | [11:7]
+wire [11:0] s_imm = {instruction[31:25], instruction[11:7]};
+
+// B-type: assemble the 13-bit signed offset directly with bit[0]=0
+//   imm[12]   = inst[31]
+//   imm[11]   = inst[7]
+//   imm[10:5] = inst[30:25]
+//   imm[4:1]  = inst[11:8]
+//   imm[0]    = 0  (all branch targets are 2-byte aligned)
+
+wire [12:0] b_imm = {instruction[31], instruction[7],
+                     instruction[30:25], instruction[11:8], 1'b0};
 
 always @(*) begin
     case (opcode)
-         LOAD_OPCODE: immediate_output = { {20{load_im[11]}}, load_im};
-         STORE_OPCODE: immediate_output = { {20{store_im[11]}}, store_im};
-         BRANCH_OPCODE: immediate_output = 2* {{20{branch_im[12]}}, branch_im};
-         default: immediate_output = 32'b0;
+        7'b0000011: begin  // LW  (I-type)
+            immediate_output = {{20{i_imm[11]}}, i_imm};
+            $display("IMM_GEN: LW imm=%0d (0x%h)", immediate_output, immediate_output);
+        end
+
+        7'b0100011: begin  // SW  (S-type)
+            immediate_output = {{20{s_imm[11]}}, s_imm};
+            $display("IMM_GEN: SW imm=%0d (0x%h)", immediate_output, immediate_output);
+        end
+
+        7'b1100011: begin  // BEQ (B-type)
+            // b_imm is already 13 bits with the implicit *2 baked in (bit0 = 0).
+            // Just sign-extend from bit 12 — do NOT append another 1'b0.
+            immediate_output = {{19{b_imm[12]}}, b_imm};
+            $display("IMM_GEN: BEQ imm=%0d (0x%h)", immediate_output, immediate_output);
+        end
+
+        7'b0110011: begin  // R-type (no immediate)
+            immediate_output = 32'b0;
+        end
+
+        default: begin
+            immediate_output = 32'b0;
+        end
     endcase
 end
+
 endmodule
